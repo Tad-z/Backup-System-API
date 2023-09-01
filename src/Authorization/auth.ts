@@ -1,6 +1,7 @@
 import jwt, { Secret } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 
+
 interface DecodedToken {
   fullName: string;
   userID: string;
@@ -13,7 +14,7 @@ const auth = (req: Request, res: Response, next: NextFunction) => {
 
     if (!token) {
       return res.status(401).json({
-        message: "Authorization token missing",
+        message: "Unauthorized Access",
       });
     }
 
@@ -21,7 +22,7 @@ const auth = (req: Request, res: Response, next: NextFunction) => {
       token,
       process.env.JWT_KEY as Secret
     ) as DecodedToken;
-    req.userData = decoded;
+    req.body.user = decoded;
     next();
   } catch (err) {
     return res.status(401).json({

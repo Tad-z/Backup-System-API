@@ -1,7 +1,8 @@
-import express, { Application } from "express";
+import express, { Application, Request, Response } from "express";
 import dotenv from "dotenv";
 import main from "./models/db"; // Make sure the path is correct
 import userRouter from "./routes/user.routes"; // Make sure the path is correct
+import fileRouter from "./routes/files.routes"
 
 dotenv.config();
 
@@ -20,4 +21,10 @@ main()
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get('/', (req: Request, res: Response) => {
+  res.send("let us goo")
+})
+
+app.use('/uploads', express.static('uploads'))
+app.use("/file", fileRouter);
 app.use("/user", userRouter);

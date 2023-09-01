@@ -118,3 +118,44 @@ export const logIn = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getUser = async (req: Request, res: Response) => {
+  try {
+    let userId = req.body.user.userID;
+    console.log(userId);
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+      return res.status(404).json({
+        message: "User does not exist",
+      });
+    }
+
+    return res.status(200).json({
+      user,
+      message: "Found User",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const users = await User.find().exec();
+    if (!users.length) return res.json([]);
+    const count = users.length;
+    return res.status(200).json({
+      message: "users retrieved successfully",
+      count,
+      users,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
