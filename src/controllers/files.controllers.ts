@@ -47,6 +47,22 @@ export const fileUpload = async (req: Request, res: Response) => {
   }
 };
 
+export const getFiles = async (req: Request, res: Response) => {
+  try {
+    const files = await File.find().exec();
+    if (!files) return res.json([]);
+    const count = files.length;
+    return res.status(200).json({
+      count,
+      files,
+      message: "Files retrieved successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export const fileDownload = async (req: Request, res: Response) => {
   try {
     const name = req.params.fileName;

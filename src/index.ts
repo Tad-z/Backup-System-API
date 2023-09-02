@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import main from "./models/db"; // Make sure the path is correct
 import userRouter from "./routes/user.routes"; // Make sure the path is correct
 import fileRouter from "./routes/files.routes"
+import folderRouter from "./routes/folder.routes"
 
 dotenv.config();
 
@@ -26,5 +27,6 @@ app.get('/', (req: Request, res: Response) => {
 })
 
 app.use('/uploads', express.static('uploads'))
+app.use('/folder', folderRouter);
 app.use("/file", fileRouter);
 app.use("/user", userRouter);
