@@ -1,31 +1,31 @@
 import { Request, Response } from "express";
 import File from "../models/file";
-import cron from "node-cron"
+import cron from "node-cron";
 
 async function deleteUnsafeFiles() {
   try {
-    const unsafeFiles = await File.find({ isUnsafe: true })
-
-   for(const file of unsafeFiles) {
-    await File.findByIdAndRemove(file._id).then((data) => {
-      if (!data) {
-        console.log("file not found")
-      } else {
-        console.log("deleted")
+    const unsafeFiles = await File.find({ isUnsafe: true });
+    if (unsafeFiles) {
+      for (const file of unsafeFiles) {
+        await File.findByIdAndRemove(file._id).then((data) => {
+          if (!data) {
+            return "file not found";
+          } else {
+            console.log("deleted");
+          }
+        });
       }
-    });
-   }
-  } catch(error) {
-    console.log(error)
+    }
+  } catch (error) {
+    console.log(error);
   }
 }
 
-cron.schedule('*/30 * * * *', () => {
+cron.schedule("*/30 * * * *", () => {
   deleteUnsafeFiles();
 });
 
-
-export const fileUpload = async (req: Request, res: Response) => { 
+export const fileUpload = async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
@@ -49,7 +49,6 @@ export const fileUpload = async (req: Request, res: Response) => {
   } catch (error) {
     console.log(error);
 
-   
     res.status(500).json({
       message: "Internal server error",
     });
@@ -58,7 +57,7 @@ export const fileUpload = async (req: Request, res: Response) => {
 
 export const getUserFiles = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.userID
+    const userId = req.user?.userID;
     const files = await File.find({ userID: userId }).exec();
     if (!files) return res.json([]);
     const count = files.length;
@@ -113,19 +112,20 @@ export const fileDownload = async (req: Request, res: Response) => {
 export const markUnsafe = async (req: Request, res: Response) => {
   const fileId = req.params.fileId;
 
-  try{
+  try {
     await File.findByIdAndUpdate(fileId, { isUnsafe: true }).then((data) => {
       if (!data) {
         res.json({
           message: `File was not found`,
         });
-      } else res.json({ 
-        data,
-        message: "File was updated successfully." });
+      } else
+        res.json({
+          data,
+          message: "File was updated successfully.",
+        });
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
-}
-
+};
