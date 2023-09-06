@@ -17,7 +17,7 @@ export const createFolder = async (req: Request, res: Response) => {
       });
     }
     const name = req.body.name;
-    const userID = req.body.user.userID;
+    const userID = req.user?.userID;
     const filesID = req.body.filesID;
 
     const folder = new Folder({
@@ -38,7 +38,7 @@ export const createFolder = async (req: Request, res: Response) => {
 
 export const getFolders = async(req: Request, res: Response) => {
     try {
-        const userId = req.body.user.userID;
+        const userId = req.user?.userID;
         const folders = await Folder.find({ userID: userId });
     
         res.status(200).json(folders);
@@ -54,7 +54,7 @@ export const deleteFolder = async (req: Request, res: Response) => {
       const folderId = req.query.folderId;
       console.log(folderId);
       
-      const userId = req.body.user.userID;
+      const userId = req.user?.userID;
       console.log(userId);
       
   

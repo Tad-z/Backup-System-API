@@ -5,10 +5,10 @@ import { Request, Response, NextFunction } from "express";
 interface DecodedToken {
   fullName: string;
   userID: string;
-  // Add other properties here if needed
+  role: string,
 }
 
-const auth = (req: Request, res: Response, next: NextFunction) => {
+const auth = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
 
@@ -22,7 +22,8 @@ const auth = (req: Request, res: Response, next: NextFunction) => {
       token,
       process.env.JWT_KEY as Secret
     ) as DecodedToken;
-    req.body.user = decoded;
+    req.user = decoded;
+    
     next();
   } catch (err) {
     return res.status(401).json({

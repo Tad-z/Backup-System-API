@@ -1,29 +1,21 @@
-import multer from "multer";
 import { Request, Response } from "express";
 import File from "../models/file";
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./src/uploads/");
-  },
 
-  filename: function (req, file, cb) {
-    cb(null, `${file.originalname}`);
-  },
-});
-export const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 200 * 1024 * 1024,
-  },
-});
-
-export const fileUpload = async (req: Request, res: Response) => {
+export const fileUpload = async (req: Request, res: Response) => { 
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
+    console.log("Request Body:", req.user);
+    console.log("Request Headers:", req.headers);
+    if (!req.user || !req.user.userID) {
+      return res.status(401).json({ message: "gUnauthorized access" });
+    }
+    const userID = req.user.userID;
+    console.log(userID);
     const upload = new File({
+      userID,
       file: req.file?.path,
     });
     const result = await upload.save();
@@ -34,20 +26,31 @@ export const fileUpload = async (req: Request, res: Response) => {
   } catch (error) {
     console.log(error);
 
-    if (error instanceof multer.MulterError) {
-      if (error.code == "LIMIT_FILE_SIZE") {
-        return res.status(500).send({
-          message: "File size cannot be larger than 200MB!",
-        });
-      }
-    }
+   
     res.status(500).json({
       message: "Internal server error",
     });
   }
 };
 
-export const getFiles = async (req: Request, res: Response) => {
+export const getUserFiles = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userID
+    const files = await File.find({ userID: userId }).exec();
+    if (!files) return res.json([]);
+    const count = files.length;
+    return res.status(200).json({
+      count,
+      files,
+      message: "Files retrieved successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const getAllFiles = async (req: Request, res: Response) => {
   try {
     const files = await File.find().exec();
     if (!files) return res.json([]);
@@ -83,3 +86,22 @@ export const fileDownload = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const markUnsafe = async (req: Request, res: Response) => {
+  const fileId = req.params.fileId;
+
+  try{
+    const file = await File.findByIdAndUpdate(fileId, { isUnsafe: true }).then((data) => {
+      if (!data) {
+        res.json({
+          message: `File was not found`,
+        });
+      } else res.json({ 
+        data,
+        message: "File was updated successfully." });
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}

@@ -41,6 +41,7 @@ export const createUser = async (req: Request, res: Response) => {
           fullName: req.body.fullName.toLowerCase(),
           emailAdress: req.body.emailAdress,
           password: hash,
+          role: req.body.role
         });
 
         try {
@@ -49,6 +50,7 @@ export const createUser = async (req: Request, res: Response) => {
           if (result) {
             console.log(result);
             res.status(200).json({
+              result,
               message: "You have signed up successfully",
             });
           } else {
@@ -97,6 +99,7 @@ export const logIn = async (req: Request, res: Response) => {
         {
           fullName: user.fullName,
           userID: user._id,
+          role: user.role,
         },
         jwtKey,
         {
@@ -121,7 +124,7 @@ export const logIn = async (req: Request, res: Response) => {
 
 export const getUser = async (req: Request, res: Response) => {
   try {
-    let userId = req.body.user.userID;
+    let userId = req.user?.userID;
     console.log(userId);
     const user = await User.findOne({ _id: userId });
     if (!user) {
@@ -159,3 +162,18 @@ export const getAllUsers = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const deleteAllUsers = async (req: Request, res: Response) => {
+  try {
+    await User.deleteMany({}).then((data) => {
+      res.status(204).json({
+        message: `${data.deletedCount} Users were deleted from cart successfully!`,
+      });
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
