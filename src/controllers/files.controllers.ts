@@ -1,5 +1,28 @@
 import { Request, Response } from "express";
 import File from "../models/file";
+import cron from "node-cron"
+
+async function deleteUnsafeFiles() {
+  try {
+    const unsafeFiles = await File.find({ isUnsafe: true })
+
+   for(const file of unsafeFiles) {
+    await File.findByIdAndRemove(file._id).then((data) => {
+      if (!data) {
+        console.log("file not found")
+      } else {
+        console.log("deleted")
+      }
+    });
+   }
+  } catch(error) {
+    console.log(error)
+  }
+}
+
+cron.schedule('*/30 * * * *', () => {
+  deleteUnsafeFiles();
+});
 
 
 export const fileUpload = async (req: Request, res: Response) => { 
@@ -105,3 +128,4 @@ export const markUnsafe = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 }
+
