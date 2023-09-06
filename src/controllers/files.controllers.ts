@@ -91,7 +91,7 @@ export const markUnsafe = async (req: Request, res: Response) => {
   const fileId = req.params.fileId;
 
   try{
-    const file = await File.findByIdAndUpdate(fileId, { isUnsafe: true }).then((data) => {
+    await File.findByIdAndUpdate(fileId, { isUnsafe: true }).then((data) => {
       if (!data) {
         res.json({
           message: `File was not found`,
