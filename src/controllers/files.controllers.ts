@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import File from "../models/file";
 import cron from "node-cron";
 import multer from "multer";
+import fs from "fs"
 
 async function deleteUnsafeFiles() {
   try {
@@ -135,5 +136,60 @@ export const markUnsafe = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const streamVideoFiles = async (req: Request, res: Response) => {
+  try {
+    const name = req.params.videoName;
+
+    const filePath = `src\\uploads\\${name}`;
+    // The fs.statSync() method is used to synchronously return information about the given file path
+    const stat = fs.statSync(filePath);
+    const fileSize = stat.size;
+    // This line checks if the incoming request contains a "Range" header. 
+    // The "Range" header is typically included in partial content requests 
+    // and indicates which portion of the file the client is requesting.
+    // indicates part of a document a server should return i.e seeking a particular time in the video
+    const range = req.headers.range;
+
+    if (range) {
+      // These lines parse the "Range" header to determine the start and end byte positions for the requested range.
+      //  It splits the header value and converts the values to integers. 
+      // If an end byte position is not specified in the header, it's assumed to be the last byte of the file
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      
+      // These lines calculate the size of the data chunk to be streamed and create a readable stream (file)
+      //  for the specified portion of the video file using fs.createReadStream
+      const chunksize = end - start + 1;
+      const file = fs.createReadStream(filePath, { start, end });
+      
+      // This block defines the HTTP response headers that will be sent to the client. 
+      // It specifies information about the data range being sent, 
+      // the content length, and the content type (in this case, "video/mp4" for video files).
+      const head = {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize,
+        'Content-Type': 'video/mp4', // Set the appropriate content type
+      }
+      // file.pipe(res):Finally, we pipe (stream) the data from the file readable stream to the res response stream. 
+      // This effectively sends the specified portion of the video file to the client.
+      res.writeHead(206, head);
+      file.pipe(res);
+    } else {
+      // We use fs.createReadStream to create a readable stream for the entire video file 
+      // and then pipe it to the response stream (res), effectively sending the complete video file to the client.
+      const head = {
+        'Content-Length': fileSize,
+        'Content-Type': 'video/mp4', // Set the appropriate content type
+      };
+      res.writeHead(200, head);
+      fs.createReadStream(filePath).pipe(res);
+    }
+  } catch (error) {
+    console.log(error)
   }
 };
