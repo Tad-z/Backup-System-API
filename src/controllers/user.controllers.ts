@@ -12,7 +12,7 @@ const validateEmail = (email: string): boolean => {
 };
 
 export const createUser = async (req: Request, res: Response) => {
-  if (!req.body.emailAdress || !req.body.fullName || !req.body.password) {
+  if (!req.body) {
     return res.status(400).json({
       message: "Missing required fields",
     });
@@ -166,9 +166,13 @@ export const getAllUsers = async (req: Request, res: Response) => {
 export const deleteAllUsers = async (req: Request, res: Response) => {
   try {
     await User.deleteMany({}).then((data) => {
-      res.status(204).json({
-        message: `${data.deletedCount} Users were deleted from cart successfully!`,
-      });
+      if(data){
+        res.status(204).json();
+      } else {
+        res.status(401).json({
+          message: "Something went wrong"
+        });
+      }
     });
   } catch (error) {
     console.log(error);

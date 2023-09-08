@@ -1,5 +1,4 @@
 import Folder from "../models/folder";
-import User from "../models/user";
 import File from "../models/file";
 import { Request, Response } from "express";
 

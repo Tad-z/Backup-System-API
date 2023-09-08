@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import File from "../models/file";
 import cron from "node-cron";
+import multer from "multer";
 
 async function deleteUnsafeFiles() {
   try {
@@ -30,13 +31,11 @@ export const fileUpload = async (req: Request, res: Response) => {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
-    console.log("Request Body:", req.user);
-    console.log("Request Headers:", req.headers);
+
     if (!req.user || !req.user.userID) {
-      return res.status(401).json({ message: "gUnauthorized access" });
+      return res.status(401).json({ message: "Unauthorized access" });
     }
     const userID = req.user.userID;
-    console.log(userID);
     const upload = new File({
       userID,
       file: req.file?.path,
@@ -48,6 +47,14 @@ export const fileUpload = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
+
+    if (error instanceof multer.MulterError) {
+      if (error.code === "LIMIT_FILE_SIZE") {
+        return res.status(500).send({
+          message: "File size cannot be larger than 200MB!",
+        });
+      }
+    }
 
     res.status(500).json({
       message: "Internal server error",
@@ -118,11 +125,12 @@ export const markUnsafe = async (req: Request, res: Response) => {
         res.json({
           message: `File was not found`,
         });
-      } else
+      } else {
         res.json({
           data,
           message: "File was updated successfully.",
         });
+      }
     });
   } catch (error) {
     console.error(error);

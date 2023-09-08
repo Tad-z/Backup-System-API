@@ -1,11 +1,10 @@
-import mongoose, { ConnectOptions } from "mongoose";
+import mongoose from "mongoose";
 
 const main = async () => {
   const mongoUri = process.env.MONGO_URI;
   if (!mongoUri) {
     throw new Error("MongoDB URI is missing in environment variables.");
   }
-
 
   try {
     const conn = await mongoose.connect(mongoUri);
